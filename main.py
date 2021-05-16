@@ -72,8 +72,8 @@ def readLines(path) -> List[str]:
 	with open(path, "r") as file:
 		if not file.readable:
 			raise FileReadError(path)
-		lines = file.readlines()
-		for line in file:
+		lines = []
+		for line in file.read().splitlines():
 			if not line.startswith("#") and len(line) > 0:
 				lines.append(line)
 		return lines
@@ -87,7 +87,7 @@ def writeLinesToFile(lines, filename):
 			if not file.writable:
 				raise FileWriteError(filename)
 			file.write("\n".join(lines))
-		printError("file written to {}".format(filename))
+		printError("file written to {}".format(os.path.abspath(filename)))
 	else:
 		printError("no lines to write")
 
@@ -110,15 +110,15 @@ def process(serverFormatter, filename):
 		printError("downloading failed ({})".format(e.message))
 		sys.exit(-1)
 	distinctLines = list(OrderedDict.fromkeys(lines))
-	countWhitelistSaved = 0
+	savedViaWhitelist = []
 	for whitelisted in loadWhitelist():
 		if whitelisted in distinctLines:
 			distinctLines.remove(whitelisted)
-			countWhitelistSaved = countWhitelistSaved + 1
-	if countWhitelistSaved == 0:
+			savedViaWhitelist.append(whitelisted)
+	if len(savedViaWhitelist) == 0:
 		printError("no domains saving via whitelisting")
-	if countWhitelistSaved > 0:
-		printError("{} domain(s) saved via whitelisting".format(countWhitelistSaved))
+	if len(savedViaWhitelist) > 0:
+		printError("{} domain(s) saved via whitelisting ({})".format(len(savedViaWhitelist), ", ".join(savedViaWhitelist)))
 	formattedForServer = serverFormatter.format(distinctLines)
 	writeLines(formattedForServer, filename)
 

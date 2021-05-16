@@ -24,7 +24,7 @@ class UnboundFormatter:
 		for line in lines:
 			if line == "localhost":
 				raise LocalhostFoundError()
-			line = "local-zone: \"{}\". always_nxdomain".format(line)
+			line = 'local-zone: "{}." always_nxdomain'.format(line)
 			formatted.append(line)
 		return formatted
 	def __str__(self) -> str:
@@ -42,7 +42,7 @@ class BindFormatter:
 		for line in lines:
 			if line == "localhost":
 				raise LocalhostFoundError()
-			line = "zone \"{}\" \{ type master; file \"/etc/bind/zones/db.poison\"; \};".format(line)
+			line = 'zone "{}" {{ type master; file "/etc/bind/zones/db.poison"; }};'.format(line)
 			formatted.append(line)
 		return formatted
 	def __str__(self) -> str:
