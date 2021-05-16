@@ -104,7 +104,7 @@ def process(serverFormatter, filename):
 		for downloaded in downloadSources(getSources()):
 			lines.append(downloaded)
 		printError("downloaded {} distinct domains".format(len(lines)))
-	except DownloadError as e:
+	except (DownloadError, requests.HTTPError) as e:
 		printError("downloading failed ({})".format(e.message))
 		sys.exit(-1)
 	distinctLines = list(OrderedDict.fromkeys(lines))

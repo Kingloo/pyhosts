@@ -5,6 +5,8 @@ import requests
 from collections import OrderedDict
 from typing import List
 
+from requests.models import HTTPError
+
 class UnknownServerTypeError(Exception):
 	""" Raised when the (REQUIRED) DNS server type is not recognised/supported by pyhosts """
 	def __init__(self, unknownServerType) -> None:
@@ -328,7 +330,7 @@ def process(serverFormatter, filename):
 		for downloaded in downloadSources(getSources()):
 			lines.append(downloaded)
 		printError("downloaded {} distinct domains".format(len(lines)))
-	except DownloadError as e:
+	except (DownloadError, requests.HTTPError) as e:
 		printError("downloading failed ({})".format(e.message))
 		sys.exit(-1)
 	distinctLines = list(OrderedDict.fromkeys(lines))
