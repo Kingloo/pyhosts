@@ -42,8 +42,8 @@ def downloadSources(sources) -> List[str]:
 			for line in formattedLines:
 				lines.append(line)
 			printError(createSourceDownloadSummary(source, len(formattedLines)))
-		printError("finished downloading ({} total)".format(len(lines)))
-	return list(set(lines)) # removes duplicates
+	printError("finished downloading ({} total)".format(len(lines)))
+	return lines
 
 def combineWithScriptDirectory(filename):
 	return os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
@@ -105,11 +105,11 @@ def process(serverFormatter, filename):
 	try:
 		for downloaded in downloadSources(getSources()):
 			lines.append(downloaded)
-		printError("downloaded {} distinct domains".format(len(lines)))
 	except (DownloadError, requests.HTTPError) as e:
 		printError("downloading failed ({})".format(e.message))
 		sys.exit(-1)
-	distinctLines = list(OrderedDict.fromkeys(lines))
+	distinctLines = list(OrderedDict.fromkeys(lines)) # removes duplicates
+	printError("downloaded {} distinct domains".format(len(distinctLines)))
 	savedViaWhitelist = []
 	for whitelisted in loadWhitelist():
 		if whitelisted in distinctLines:
