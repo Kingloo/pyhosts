@@ -70,7 +70,8 @@ def process(serverFormatter, filename):
 		lines = downloadSources(getSources())
 		printError("downloaded {} distinct domains".format(len(lines)))
 	except DownloadError as e:
-		sys.exit(-1, "download failed ({}), exiting".format(e.message))
+		printError("downloading failed ({})".format(e.message))
+		sys.exit(-1)
 	formattedForServer = serverFormatter.format(lines)
 	writeLines(formattedForServer, filename)
 
@@ -113,7 +114,7 @@ def main(args: List[str]):
 		print(getUsage())
 		print("-----------------")
 		logging.getLogger(__name__).exception(e)
-		sys.exit(-1, "error")
+		sys.exit(-1)
 
 if __name__ == "__main__":
 	main(sys.argv[1:])
