@@ -6,15 +6,16 @@ from formatters import *
 from sources import *
 from exceptions import *
 
-sources = [
-	MVPS(),
-	FirebogAdGuardDNS(),
-	FirebogPrigentAds(),
-	FirebogPrigentMalware(),
-	FirebogPrigentCrypto(),
-	FirebogAdmiral(),
-	FirebogEasyPrivacy()
-]
+def getSources():
+	return [
+		MVPS(),
+		FirebogAdGuardDNS(),
+		FirebogPrigentAds(),
+		FirebogPrigentMalware(),
+		FirebogPrigentCrypto(),
+		FirebogAdmiral(),
+		FirebogEasyPrivacy()
+	]
 
 def downloadSource(session: requests.Session, source) -> List[str]:
 	response = session.get(source.url)
@@ -23,7 +24,7 @@ def downloadSource(session: requests.Session, source) -> List[str]:
 	return response.text.splitlines()
 
 def createSourceDownloadSummary(source, count) -> str:
-	longestNameLength = max(len(s.name) for s in sources)
+	longestNameLength = max(len(s.name) for s in getSources())
 	paddingRequired = longestNameLength - len(source.name)
 	padding = " " * paddingRequired # creates a string of empty spaces of paddingRequired's length
 	return "-\t{}{}\t{}".format(source.name, padding, count)
@@ -66,7 +67,7 @@ def process(serverFormatter, filename):
 	printError("using {} and saving to {}".format(str(serverFormatter), filename))
 	lines = []
 	try:
-		lines = downloadSources(sources)
+		lines = downloadSources(getSources())
 		printError("downloaded {} distinct domains".format(len(lines)))
 	except DownloadError as e:
 		sys.exit(-1, "download failed ({}), exiting".format(e.message))
@@ -99,16 +100,18 @@ def parseArguments(args):
 def printError(message: str):
 	print(message, file=sys.stderr)
 
+def getUsage():
+	return """USAGE:
+first argument is DNS server type (REQUIRED): unbound, bind, winhosts
+second argument is output filename (OPTIONAL) """
+
 def main(args):
 	try:
 		(serverFormatter, filename) = parseArguments(args)
 		process(serverFormatter, filename)
 	except Exception as e:
-		logging.getLogger(__name__).exception(e)
+		# logging.getLogger(__name__).exception(e)
+		print(getUsage())
 
 if __name__ == "__main__":
 	main(sys.argv[1:])
-
-# first argument is filename (removed)
-# second argument is DNS server type (required)
-# third argument is filename to save to (optional)
