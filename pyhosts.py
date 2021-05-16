@@ -271,6 +271,7 @@ def main(args: List[str]):
 		print(getUsage())
 		print("-----------------")
 		logging.getLogger(__name__).exception(e)
+		sys.exit(-1, "error")
 
 if __name__ == "__main__":
 	main(sys.argv[1:])
