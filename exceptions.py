@@ -39,3 +39,11 @@ class FileWritingError(Exception):
 		super().__init__(self.message)
 	def __str__(self) -> str:
 		return self.message
+
+class LocalhostFoundError(Exception):
+	""" Raised when localhost found its way to a formatter """
+	def __init__(self, filename) -> None:
+		self.message = "tried to pass localhost to a formatter"
+		super().__init__(self.message)
+	def __str__(self) -> str:
+		return self.message

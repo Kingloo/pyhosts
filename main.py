@@ -22,10 +22,10 @@ def downloadSource(session: requests.Session, source) -> List[str]:
 		raise DownloadError(source, response.status_code)
 	return response.text.splitlines()
 
-def createSourceDownloadSummary(source, count):
+def createSourceDownloadSummary(source, count) -> str:
 	longestNameLength = max(len(s.name) for s in sources)
 	paddingRequired = longestNameLength - len(source.name)
-	padding = " " * paddingRequired
+	padding = " " * paddingRequired # creates a string of empty spaces of paddingRequired's length
 	return "-\t{}{}\t{}".format(source.name, padding, count)
 
 def downloadSources(sources) -> List[str]:
@@ -33,14 +33,14 @@ def downloadSources(sources) -> List[str]:
 		raise NoSourcesConfiguredError()
 	lines = []
 	with requests.Session() as session:
+		printError("begin downloading from {} sources".format(len(sources)))
 		for source in sources:
 			downloadedLines = downloadSource(session, source)
 			formattedLines = source.format(downloadedLines)
 			for line in formattedLines:
 				lines.append(line)
-			# printError("\t{}\t\t\t{} domains downloaded".format(source.name, len(formattedLines)))
 			printError(createSourceDownloadSummary(source, len(formattedLines)))
-
+		printError("finished downloading")
 	return list(set(lines)) # removes duplicates
 
 def writeLinesToStdOut(lines):
@@ -64,15 +64,14 @@ def writeLines(lines, filename):
 
 def process(serverFormatter, filename):
 	printError("using {} and saving to {}".format(str(serverFormatter), filename))
-	lines: List[str] = []
+	lines = []
 	try:
 		lines = downloadSources(sources)
 		printError("downloaded {} distinct domains".format(len(lines)))
 	except DownloadError as e:
-		sys.exit("download failed ({}), exiting".format(e.message))
-	# formattedForServer = serverFormatter.format(lines)
-	# writeLines(formattedForServer, filename)
-	writeLines(lines, filename)
+		sys.exit(-1, "download failed ({}), exiting".format(e.message))
+	formattedForServer = serverFormatter.format(lines)
+	writeLines(formattedForServer, filename)
 
 def determineServerFormatter(serverArg: str):
 	serverArgLower = serverArg.lower()
