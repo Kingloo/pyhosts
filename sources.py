@@ -13,8 +13,14 @@ def excludeUnwantedLines(lines):
 
 class MVPS():
 	def __init__(self) -> None:
-		self.name = "MVPS"
-		self.url = "http://winhelp2002.mvps.org/hosts.txt"
+		self._name = "MVPS"
+		self._url = "http://winhelp2002.mvps.org/hosts.txt"
+	@property
+	def name(self):
+		return self._name
+	@property
+	def url(self):
+		return self._url
 	def format(self, lines: List[str]) -> List[str]:
 		formatted = []
 		wantedLines = excludeUnwantedLines(lines)
@@ -28,8 +34,14 @@ class MVPS():
 
 class FirebogAdGuardDNS():
 	def __init__(self) -> None:
-		self.name = "Firebog AdGuard DNS"
-		self.url = "https://v.firebog.net/hosts/AdguardDNS.txt"
+		self._name = "Firebog AdGuard DNS"
+		self._url = "https://v.firebog.net/hosts/AdguardDNS.txt"
+	@property
+	def name(self):
+		return self._name
+	@property
+	def url(self):
+		return self._url
 	def format(self, lines: List[str]) -> List[str]:
 		return excludeUnwantedLines(lines)
 	def __str__(self) -> str:
@@ -37,8 +49,14 @@ class FirebogAdGuardDNS():
 
 class FirebogPrigentAds():
 	def __init__(self) -> None:
-		self.name = "Firebog Prigent Ads"
-		self.url = "https://v.firebog.net/hosts/Prigent-Ads.txt"
+		self._name = "Firebog Prigent Ads"
+		self._url = "https://v.firebog.net/hosts/Prigent-Ads.txt"
+	@property
+	def name(self):
+		return self._name
+	@property
+	def url(self):
+		return self._url
 	def format(self, lines: List[str]) -> List[str]:
 		return excludeUnwantedLines(lines)
 	def __str__(self) -> str:
@@ -46,8 +64,14 @@ class FirebogPrigentAds():
 
 class FirebogPrigentCrypto():
 	def __init__(self) -> None:
-		self.name = "Firebog Prigent Crypto"
-		self.url = "https://v.firebog.net/hosts/Prigent-Crypto.txt"
+		self._name = "Firebog Prigent Crypto"
+		self._url = "https://v.firebog.net/hosts/Prigent-Crypto.txt"
+	@property
+	def name(self):
+		return self._name
+	@property
+	def url(self):
+		return self._url
 	def format(self, lines: List[str]) -> List[str]:
 		return excludeUnwantedLines(lines)
 	def __str__(self) -> str:
@@ -55,8 +79,14 @@ class FirebogPrigentCrypto():
 
 class FirebogPrigentMalware():
 	def __init__(self) -> None:
-		self.name = "Firebog Prigent Malware"
-		self.url = "https://v.firebog.net/hosts/Prigent-Malware.txt"
+		self._name = "Firebog Prigent Malware"
+		self._url = "https://v.firebog.net/hosts/Prigent-Malware.txt"
+	@property
+	def name(self):
+		return self._name
+	@property
+	def url(self):
+		return self._url
 	def format(self, lines: List[str]) -> List[str]:
 		return excludeUnwantedLines(lines)
 	def __str__(self) -> str:
@@ -64,8 +94,14 @@ class FirebogPrigentMalware():
 
 class FirebogAdmiral():
 	def __init__(self) -> None:
-		self.name = "Firebog Admiral"
-		self.url = "https://v.firebog.net/hosts/Admiral.txt"
+		self._name = "Firebog Admiral"
+		self._url = "https://v.firebog.net/hosts/Admiral.txt"
+	@property
+	def name(self):
+		return self._name
+	@property
+	def url(self):
+		return self._url
 	def format(self, lines: List[str]) -> List[str]:
 		return excludeUnwantedLines(lines)
 	def __str__(self) -> str:
@@ -73,8 +109,14 @@ class FirebogAdmiral():
 
 class FirebogEasyPrivacy():
 	def __init__(self) -> None:
-		self.name = "Firebog Easy Privacy"
-		self.url = "https://v.firebog.net/hosts/Easyprivacy.txt"
+		self._name = "Firebog Easy Privacy"
+		self._url = "https://v.firebog.net/hosts/Easyprivacy.txt"
+	@property
+	def name(self):
+		return self._name
+	@property
+	def url(self):
+		return self._url
 	def format(self, lines: List[str]) -> List[str]:
 		return excludeUnwantedLines(lines)
 	def __str__(self) -> str:
