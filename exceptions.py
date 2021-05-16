@@ -50,10 +50,21 @@ class NoSourcesConfiguredError(Exception):
 	def __str__(self) -> str:
 		return self.message
 
-class FileWritingError(Exception):
+class FileWriteError(Exception):
 	""" Raised when the output file could not be written to """
 	def __init__(self, filename) -> None:
 		self._message = "file could not be written to: {}".format(filename)
+		super().__init__(self.message)
+	@property
+	def message(self):
+		return self._message
+	def __str__(self) -> str:
+		return self.message
+
+class FileReadError(Exception):
+	""" Raised when file could not be read """
+	def __init__(self, filename) -> None:
+		self._message = "file could not be read: {}".format(filename)
 		super().__init__(self.message)
 	@property
 	def message(self):

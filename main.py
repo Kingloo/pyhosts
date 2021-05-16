@@ -48,18 +48,10 @@ def downloadSources(sources) -> List[str]:
 def combineWithScriptDirectory(filename):
 	return os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
 
-def readFile(path) -> List[str]:
-	with open(path, "r") as file:
-		lines = file.readlines()
-		for line in file:
-			if not line.startswith("#") and len(line) > 0:
-				lines.append(line)
-		return lines
-
 def loadWhitelist() -> List[str]:
 	whitelistPath = combineWithScriptDirectory("whitelist.txt")
 	try:
-		whitelist = readFile(whitelistPath)
+		whitelist = readLines(whitelistPath)
 		printError("loaded {} whitelisted domain(s)".format(len(whitelist)))
 		return whitelist
 	except FileNotFoundError:
@@ -69,12 +61,22 @@ def loadWhitelist() -> List[str]:
 def loadBlacklist() -> List[str]:
 	blacklistPath = combineWithScriptDirectory("blacklist.txt")
 	try:
-		blacklist = readFile(blacklistPath)
+		blacklist = readLines(blacklistPath)
 		printError("loaded {} blacklisted domain(s)".format(len(blacklist)))
 		return blacklist
 	except FileNotFoundError:
 		printError("no blacklist file found")
 	return []
+
+def readLines(path) -> List[str]:
+	with open(path, "r") as file:
+		if not file.readable:
+			raise FileReadError(path)
+		lines = file.readlines()
+		for line in file:
+			if not line.startswith("#") and len(line) > 0:
+				lines.append(line)
+		return lines
 
 def writeLinesToStdOut(lines: List[str]):
 	print("\n".join(lines), file=sys.stdout)
@@ -82,10 +84,10 @@ def writeLinesToStdOut(lines: List[str]):
 def writeLinesToFile(lines, filename):
 	if len(lines) > 0:
 		with open(filename, "w") as file:
-			if file.writable:
-				file.write("\n".join(lines))
-			else:
-				raise FileWritingError(filename)
+			if not file.writable:
+				raise FileWriteError(filename)
+			file.write("\n".join(lines))
+		printError("file written to {}".format(filename))
 	else:
 		printError("no lines to write")
 
@@ -96,7 +98,7 @@ def writeLines(lines, filename):
 		writeLinesToFile(lines, filename)
 
 def process(serverFormatter, filename):
-	printError("using {} and saving to {}".format(str(serverFormatter), filename))
+	printError("using {}".format(serverFormatter.name))
 	lines = []
 	for blacklisted in loadBlacklist():
 		lines.append(blacklisted)
@@ -113,21 +115,12 @@ def process(serverFormatter, filename):
 		if whitelisted in distinctLines:
 			distinctLines.remove(whitelisted)
 			countWhitelistSaved = countWhitelistSaved + 1
+	if countWhitelistSaved == 0:
+		printError("no domains saving via whitelisting")
 	if countWhitelistSaved > 0:
 		printError("{} domain(s) saved via whitelisting".format(countWhitelistSaved))
 	formattedForServer = serverFormatter.format(distinctLines)
 	writeLines(formattedForServer, filename)
-
-def determineServerFormatter(serverArg: str):
-	serverArgLower = serverArg.lower()
-	if serverArgLower == "unbound":
-		return UnboundFormatter()
-	elif serverArgLower == "bind":
-		return BindFormatter()
-	elif serverArgLower == "winhosts":
-		return WindowsHostsFileFormatter()
-	else:
-		raise UnknownServerTypeError(serverArg)
 
 def parseArguments(args):
 	if len(args) < 1:
