@@ -88,6 +88,7 @@ def determineServerFormatter(serverArg: str):
 
 def parseArguments(args):
 	if len(args) < 1:
+		print(getUsage())
 		raise UsageError("too few arguments")
 	serverFormatter = determineServerFormatter(args[0])
 	if len(args) >= 2:
@@ -111,8 +112,6 @@ def main(args: List[str]):
 		(serverFormatter, filename) = parseArguments(args)
 		process(serverFormatter, filename)
 	except Exception as e:
-		print(getUsage())
-		print("-----------------")
 		logging.getLogger(__name__).exception(e)
 		sys.exit(-1)
 
