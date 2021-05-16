@@ -5,8 +5,6 @@ import requests
 from collections import OrderedDict
 from typing import List
 
-from requests.models import HTTPError
-
 class UnknownServerTypeError(Exception):
 	""" Raised when the (REQUIRED) DNS server type is not recognised/supported by pyhosts """
 	def __init__(self, unknownServerType) -> None:
@@ -59,10 +57,21 @@ class NoSourcesConfiguredError(Exception):
 	def __str__(self) -> str:
 		return self.message
 
-class FileWritingError(Exception):
+class FileWriteError(Exception):
 	""" Raised when the output file could not be written to """
 	def __init__(self, filename) -> None:
 		self._message = "file could not be written to: {}".format(filename)
+		super().__init__(self.message)
+	@property
+	def message(self):
+		return self._message
+	def __str__(self) -> str:
+		return self.message
+
+class FileReadError(Exception):
+	""" Raised when file could not be read """
+	def __init__(self, filename) -> None:
+		self._message = "file could not be read: {}".format(filename)
 		super().__init__(self.message)
 	@property
 	def message(self):
@@ -203,25 +212,60 @@ class FirebogEasyPrivacy():
 	def __str__(self) -> str:
 		return "{} ({})".format(self.name, self.url)
 
+def determineServerFormatter(serverArg: str):
+	serverArgLower = serverArg.lower()
+	if serverArgLower == "unbound":
+		return UnboundFormatter()
+	elif serverArgLower == "bind":
+		return BindFormatter()
+	elif serverArgLower == "winhosts":
+		return WindowsHostsFileFormatter()
+	else:
+		raise UnknownServerTypeError(serverArg)
+
 class UnboundFormatter:
 	def __init__(self) -> None:
+		self._name = "Unbound Formatter"
 		self.list = []
+	@property
+	def name(self):
+		return self._name
 	def format(self, lines: List[str]) -> List[str]:
-		pass
+		formatted = []
+		for line in lines:
+			if line == "localhost":
+				raise LocalhostFoundError()
+			line = 'local-zone: "{}." always_nxdomain'.format(line)
+			formatted.append(line)
+		return formatted
 	def __str__(self) -> str:
-		return "Unbound Formatter"
+		return self.name
 
 class BindFormatter:
 	def __init__(self) -> None:
+		self._name = "BIND Formatter"
 		self.list = []
+	@property
+	def name(self):
+		return self._name
 	def format(self, lines: List[str]) -> List[str]:
-		pass
+		formatted = []
+		for line in lines:
+			if line == "localhost":
+				raise LocalhostFoundError()
+			line = 'zone "{}" {{ type master; file "/etc/bind/zones/db.poison"; }};'.format(line)
+			formatted.append(line)
+		return formatted
 	def __str__(self) -> str:
-		return "BIND Formatter"
+		return self.name
 
 class WindowsHostsFileFormatter:
 	def __init__(self) -> None:
+		self._name = "Windows Hosts File Formatter"
 		self.list = []
+	@property
+	def name(self):
+		return self._name
 	def format(self, lines: List[str]) -> List[str]:
 		formatted = ["127.0.0.1 localhost", "::1 localhost", ""]
 		for line in lines:
@@ -231,7 +275,7 @@ class WindowsHostsFileFormatter:
 			formatted.append(line)
 		return formatted
 	def __str__(self) -> str:
-		return "Windows Hosts File Formatter"
+		return self.name
 
 def getSources():
 	return [
@@ -274,18 +318,10 @@ def downloadSources(sources) -> List[str]:
 def combineWithScriptDirectory(filename):
 	return os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
 
-def readFile(path) -> List[str]:
-	with open(path, "r") as file:
-		lines = file.readlines()
-		for line in file:
-			if not line.startswith("#") and len(line) > 0:
-				lines.append(line)
-		return lines
-
 def loadWhitelist() -> List[str]:
 	whitelistPath = combineWithScriptDirectory("whitelist.txt")
 	try:
-		whitelist = readFile(whitelistPath)
+		whitelist = readLines(whitelistPath)
 		printError("loaded {} whitelisted domain(s)".format(len(whitelist)))
 		return whitelist
 	except FileNotFoundError:
@@ -295,12 +331,22 @@ def loadWhitelist() -> List[str]:
 def loadBlacklist() -> List[str]:
 	blacklistPath = combineWithScriptDirectory("blacklist.txt")
 	try:
-		blacklist = readFile(blacklistPath)
+		blacklist = readLines(blacklistPath)
 		printError("loaded {} blacklisted domain(s)".format(len(blacklist)))
 		return blacklist
 	except FileNotFoundError:
 		printError("no blacklist file found")
 	return []
+
+def readLines(path) -> List[str]:
+	with open(path, "r") as file:
+		if not file.readable:
+			raise FileReadError(path)
+		lines = []
+		for line in file.read().splitlines():
+			if not line.startswith("#") and len(line) > 0:
+				lines.append(line)
+		return lines
 
 def writeLinesToStdOut(lines: List[str]):
 	print("\n".join(lines), file=sys.stdout)
@@ -308,10 +354,10 @@ def writeLinesToStdOut(lines: List[str]):
 def writeLinesToFile(lines, filename):
 	if len(lines) > 0:
 		with open(filename, "w") as file:
-			if file.writable:
-				file.write("\n".join(lines))
-			else:
-				raise FileWritingError(filename)
+			if not file.writable:
+				raise FileWriteError(filename)
+			file.write("\n".join(lines))
+		printError("file written to {}".format(os.path.abspath(filename)))
 	else:
 		printError("no lines to write")
 
@@ -322,7 +368,7 @@ def writeLines(lines, filename):
 		writeLinesToFile(lines, filename)
 
 def process(serverFormatter, filename):
-	printError("using {} and saving to {}".format(str(serverFormatter), filename))
+	printError("using {}".format(serverFormatter.name))
 	lines = []
 	for blacklisted in loadBlacklist():
 		lines.append(blacklisted)
@@ -334,26 +380,17 @@ def process(serverFormatter, filename):
 		printError("downloading failed ({})".format(e.message))
 		sys.exit(-1)
 	distinctLines = list(OrderedDict.fromkeys(lines))
-	countWhitelistSaved = 0
+	savedViaWhitelist = []
 	for whitelisted in loadWhitelist():
 		if whitelisted in distinctLines:
 			distinctLines.remove(whitelisted)
-			countWhitelistSaved = countWhitelistSaved + 1
-	if countWhitelistSaved > 0:
-		printError("{} domain(s) saved via whitelisting".format(countWhitelistSaved))
+			savedViaWhitelist.append(whitelisted)
+	if len(savedViaWhitelist) == 0:
+		printError("no domains saving via whitelisting")
+	if len(savedViaWhitelist) > 0:
+		printError("{} domain(s) saved via whitelisting ({})".format(len(savedViaWhitelist), ", ".join(savedViaWhitelist)))
 	formattedForServer = serverFormatter.format(distinctLines)
 	writeLines(formattedForServer, filename)
-
-def determineServerFormatter(serverArg: str):
-	serverArgLower = serverArg.lower()
-	if serverArgLower == "unbound":
-		return UnboundFormatter()
-	elif serverArgLower == "bind":
-		return BindFormatter()
-	elif serverArgLower == "winhosts":
-		return WindowsHostsFileFormatter()
-	else:
-		raise UnknownServerTypeError(serverArg)
 
 def parseArguments(args):
 	if len(args) < 1:
