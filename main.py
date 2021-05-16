@@ -105,13 +105,14 @@ def getUsage():
 first argument is DNS server type (REQUIRED): unbound, bind, winhosts
 second argument is output filename (OPTIONAL) """
 
-def main(args):
+def main(args: List[str]):
 	try:
 		(serverFormatter, filename) = parseArguments(args)
 		process(serverFormatter, filename)
 	except Exception as e:
-		# logging.getLogger(__name__).exception(e)
 		print(getUsage())
+		print("-----------------")
+		logging.getLogger(__name__).exception(e)
 
 if __name__ == "__main__":
 	main(sys.argv[1:])

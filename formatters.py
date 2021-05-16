@@ -21,10 +21,7 @@ class WindowsHostsFileFormatter:
 	def __init__(self) -> None:
 		self.list = []
 	def format(self, lines: List[str]) -> List[str]:
-		formatted = []
-		formatted.append("127.0.0.1 localhost")
-		formatted.append("::1 localhost")
-		formatted.append("")
+		formatted = ["127.0.0.1 localhost", "::1 localhost", ""]
 		for line in lines:
 			if line == "localhost":
 				raise LocalhostFoundError()
