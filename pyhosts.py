@@ -7,52 +7,78 @@ from typing import List
 class UnknownServerTypeError(Exception):
 	""" Raised when the (REQUIRED) DNS server type is not recognised/supported by pyhosts """
 	def __init__(self, unknownServerType) -> None:
-		self.unknownServerType = unknownServerType
+		self._unknownServerType = unknownServerType
 		super().__init__(self.unknownServerType)
+	@property
+	def unknownServerType(self):
+		return self._unknownServerType
 	def __str__(self) -> str:
 		return self.message
 
 class UsageError(Exception):
 	""" Raised when the command line arguments don't match required usage """
 	def __init__(self, message) -> None:
-		self.message = message
+		self._message = message
 		super().__init__(self.message)
+	@property
+	def message(self):
+		return self._message
 	def __str__(self) -> str:
 		return self.message
 
 class DownloadError(Exception):
 	""" Raised when downloading a source return an HTTP status code other than 200 """
 	def __init__(self, source, status_code) -> None:
-		self.source = source
-		self.status_code = status_code
-		self.message = "{} ({})".format(source, status_code)
+		self._source = source
+		self._status_code = status_code
+		self._message = "{} ({})".format(source, status_code)
 		super().__init__(self.message)
+	@property
+	def source(self):
+		return self._source
+	@property
+	def status_code(self):
+		return self._status_code
+	@property
+	def message(self):
+		return self._message
 	def __str__(self) -> str:
 		return self.message
 
 class NoSourcesConfiguredError(Exception):
 	""" Raised when there are no sources configured """
 	def __init__(self) -> None:
-		self.message = "there are no sources configured"
+		self._message = "there are no sources configured"
 		super().__init__(self.message)
+	@property
+	def message(self):
+		return self._message
 	def __str__(self) -> str:
 		return self.message
 
 class FileWritingError(Exception):
 	""" Raised when the output file could not be written to """
 	def __init__(self, filename) -> None:
-		self.message = "file could not be written to: {}".format(filename)
+		self._message = "file could not be written to: {}".format(filename)
 		super().__init__(self.message)
+	@property
+	def message(self):
+		return self._message
 	def __str__(self) -> str:
 		return self.message
 
 class LocalhostFoundError(Exception):
 	""" Raised when localhost found its way to a formatter """
 	def __init__(self) -> None:
-		self.message = "tried to pass localhost to a formatter"
+		self._message = "tried to pass localhost to a formatter"
 		super().__init__(self.message)
+	@property
+	def message(self):
+		return self._message
 	def __str__(self) -> str:
 		return self.message
+
+from typing import List
 
 def excludeUnwantedLines(lines):
 	wantedLines = []
@@ -67,8 +93,14 @@ def excludeUnwantedLines(lines):
 
 class MVPS():
 	def __init__(self) -> None:
-		self.name = "MVPS"
-		self.url = "http://winhelp2002.mvps.org/hosts.txt"
+		self._name = "MVPS"
+		self._url = "http://winhelp2002.mvps.org/hosts.txt"
+	@property
+	def name(self):
+		return self._name
+	@property
+	def url(self):
+		return self._url
 	def format(self, lines: List[str]) -> List[str]:
 		formatted = []
 		wantedLines = excludeUnwantedLines(lines)
@@ -82,8 +114,14 @@ class MVPS():
 
 class FirebogAdGuardDNS():
 	def __init__(self) -> None:
-		self.name = "Firebog AdGuard DNS"
-		self.url = "https://v.firebog.net/hosts/AdguardDNS.txt"
+		self._name = "Firebog AdGuard DNS"
+		self._url = "https://v.firebog.net/hosts/AdguardDNS.txt"
+	@property
+	def name(self):
+		return self._name
+	@property
+	def url(self):
+		return self._url
 	def format(self, lines: List[str]) -> List[str]:
 		return excludeUnwantedLines(lines)
 	def __str__(self) -> str:
@@ -91,8 +129,14 @@ class FirebogAdGuardDNS():
 
 class FirebogPrigentAds():
 	def __init__(self) -> None:
-		self.name = "Firebog Prigent Ads"
-		self.url = "https://v.firebog.net/hosts/Prigent-Ads.txt"
+		self._name = "Firebog Prigent Ads"
+		self._url = "https://v.firebog.net/hosts/Prigent-Ads.txt"
+	@property
+	def name(self):
+		return self._name
+	@property
+	def url(self):
+		return self._url
 	def format(self, lines: List[str]) -> List[str]:
 		return excludeUnwantedLines(lines)
 	def __str__(self) -> str:
@@ -100,8 +144,14 @@ class FirebogPrigentAds():
 
 class FirebogPrigentCrypto():
 	def __init__(self) -> None:
-		self.name = "Firebog Prigent Crypto"
-		self.url = "https://v.firebog.net/hosts/Prigent-Crypto.txt"
+		self._name = "Firebog Prigent Crypto"
+		self._url = "https://v.firebog.net/hosts/Prigent-Crypto.txt"
+	@property
+	def name(self):
+		return self._name
+	@property
+	def url(self):
+		return self._url
 	def format(self, lines: List[str]) -> List[str]:
 		return excludeUnwantedLines(lines)
 	def __str__(self) -> str:
@@ -109,8 +159,14 @@ class FirebogPrigentCrypto():
 
 class FirebogPrigentMalware():
 	def __init__(self) -> None:
-		self.name = "Firebog Prigent Malware"
-		self.url = "https://v.firebog.net/hosts/Prigent-Malware.txt"
+		self._name = "Firebog Prigent Malware"
+		self._url = "https://v.firebog.net/hosts/Prigent-Malware.txt"
+	@property
+	def name(self):
+		return self._name
+	@property
+	def url(self):
+		return self._url
 	def format(self, lines: List[str]) -> List[str]:
 		return excludeUnwantedLines(lines)
 	def __str__(self) -> str:
@@ -118,8 +174,14 @@ class FirebogPrigentMalware():
 
 class FirebogAdmiral():
 	def __init__(self) -> None:
-		self.name = "Firebog Admiral"
-		self.url = "https://v.firebog.net/hosts/Admiral.txt"
+		self._name = "Firebog Admiral"
+		self._url = "https://v.firebog.net/hosts/Admiral.txt"
+	@property
+	def name(self):
+		return self._name
+	@property
+	def url(self):
+		return self._url
 	def format(self, lines: List[str]) -> List[str]:
 		return excludeUnwantedLines(lines)
 	def __str__(self) -> str:
@@ -127,8 +189,14 @@ class FirebogAdmiral():
 
 class FirebogEasyPrivacy():
 	def __init__(self) -> None:
-		self.name = "Firebog Easy Privacy"
-		self.url = "https://v.firebog.net/hosts/Easyprivacy.txt"
+		self._name = "Firebog Easy Privacy"
+		self._url = "https://v.firebog.net/hosts/Easyprivacy.txt"
+	@property
+	def name(self):
+		return self._name
+	@property
+	def url(self):
+		return self._url
 	def format(self, lines: List[str]) -> List[str]:
 		return excludeUnwantedLines(lines)
 	def __str__(self) -> str:
