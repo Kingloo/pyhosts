@@ -263,7 +263,6 @@ def determineServerFormatter(serverArg: str):
 class UnboundFormatter:
 	def __init__(self) -> None:
 		self._name = "Unbound Formatter"
-		self.list = []
 	@property
 	def name(self):
 		return self._name
@@ -281,7 +280,6 @@ class UnboundFormatter:
 class BindFormatter:
 	def __init__(self) -> None:
 		self._name = "BIND Formatter"
-		self.list = []
 	@property
 	def name(self):
 		return self._name
@@ -299,7 +297,6 @@ class BindFormatter:
 class WindowsHostsFileFormatter:
 	def __init__(self) -> None:
 		self._name = "Windows Hosts File Formatter"
-		self.list = []
 	@property
 	def name(self):
 		return self._name
