@@ -1,4 +1,45 @@
+import requests
 from typing import List
+from main import printError
+from exceptions import DownloadError, NoSourcesConfiguredError
+
+def getSources():
+	return [
+		MVPS(),
+		FirebogAdGuardDNS(),
+		FirebogPrigentAds(),
+		FirebogPrigentMalware(),
+		FirebogPrigentCrypto(),
+		FirebogAdmiral(),
+		FirebogEasyPrivacy()
+	]
+
+def downloadSource(session: requests.Session, source) -> List[str]:
+	response = session.get(source.url)
+	if response.status_code is not 200:
+		raise DownloadError(source, response.status_code)
+	return response.text.splitlines()
+
+def createSourceDownloadSummary(source, count) -> str:
+	longestNameLength = max(len(s.name) for s in getSources())
+	paddingRequired = longestNameLength - len(source.name)
+	padding = " " * paddingRequired # creates a string of empty spaces of paddingRequired's length
+	return "-\t{}{}\t{}".format(source.name, padding, count)
+
+def downloadSources(sources) -> List[str]:
+	if len(sources) == 0:
+		raise NoSourcesConfiguredError()
+	lines = []
+	with requests.Session() as session:
+		printError("begin downloading from {} sources".format(len(sources)))
+		for source in sources:
+			downloadedLines = downloadSource(session, source)
+			formattedLines = source.format(downloadedLines)
+			for line in formattedLines:
+				lines.append(line)
+			printError(createSourceDownloadSummary(source, len(formattedLines)))
+	printError("finished downloading ({} total)".format(len(lines)))
+	return lines
 
 def excludeUnwantedLines(lines):
 	wantedLines = []
