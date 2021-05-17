@@ -35,11 +35,8 @@ def readLines(path) -> List[str]:
 	with open(path, "r") as file:
 		if not file.readable:
 			raise FileReadError(path)
-		lines = []
-		for line in file.read().splitlines():
-			if not line.startswith("#") and len(line) > 0:
-				lines.append(line)
-		return lines
+		filterFunc = lambda x: not x.startswith("#") and len(x) > 0
+		return list(filter(filterFunc, file.read().splitlines()))
 
 def writeLinesToStdOut(lines: List[str]):
 	print("\n".join(lines), file=sys.stdout)
@@ -63,25 +60,24 @@ def writeLines(lines, filename):
 def process(serverFormatter, filename):
 	printError("using {}".format(serverFormatter.name))
 	lines = []
-	for blacklisted in loadBlacklist():
-		lines.append(blacklisted)
+	lines.extend(loadBlacklist())
 	try:
-		for downloaded in downloadSources(getSources()):
-			lines.append(downloaded)
+		downloaded = downloadSources(getSources())
+		lines.extend(downloaded)
 	except (DownloadError, requests.HTTPError) as e:
 		printError("downloading failed ({})".format(e.message))
 		sys.exit(-1)
 	distinctLines = list(OrderedDict.fromkeys(lines)) # removes duplicates
-	printError("downloaded {} distinct domains".format(len(distinctLines)))
+	printError("{} distinct domains".format(len(distinctLines)))
 	savedViaWhitelist = []
 	for whitelisted in loadWhitelist():
 		if whitelisted in distinctLines:
 			distinctLines.remove(whitelisted)
 			savedViaWhitelist.append(whitelisted)
-	if len(savedViaWhitelist) == 0:
-		printError("no domains saving via whitelisting")
 	if len(savedViaWhitelist) > 0:
 		printError("{} domain(s) saved via whitelisting ({})".format(len(savedViaWhitelist), ", ".join(savedViaWhitelist)))
+	else:
+		printError("no domains saving via whitelisting")
 	formattedForServer = serverFormatter.format(distinctLines)
 	writeLines(formattedForServer, filename)
 

@@ -29,28 +29,25 @@ def createSourceDownloadSummary(source, count) -> str:
 def downloadSources(sources) -> List[str]:
 	if len(sources) == 0:
 		raise NoSourcesConfiguredError()
-	lines = []
+	lines: List[str] = []
 	with requests.Session() as session:
 		printError("begin downloading from {} sources".format(len(sources)))
 		for source in sources:
 			downloadedLines = downloadSource(session, source)
 			formattedLines = source.format(downloadedLines)
-			for line in formattedLines:
-				lines.append(line)
+			lines.extend(formattedLines)
 			printError(createSourceDownloadSummary(source, len(formattedLines)))
 	printError("finished downloading ({} total)".format(len(lines)))
 	return lines
 
-def excludeUnwantedLines(lines):
-	wantedLines = []
-	for line in lines:
-		isComment = line.startswith("#")
-		isEmpty = len(line) == 0
-		isLocalhost = line == "localhost"
-		isWanted = isComment == False and isEmpty == False and isLocalhost == False
-		if isWanted:
-			wantedLines.append(line)
-	return wantedLines
+def isValid(line: str) -> bool:
+	isComment = line.startswith("#")
+	isEmpty = len(line) == 0
+	isLocalhost = line == "localhost"
+	return isComment == False and isEmpty == False and isLocalhost == False
+
+def excludeUnwantedLines(lines: List[str]) -> List[str]:
+	return list(filter(isValid, lines))
 
 class MVPS():
 	def __init__(self) -> None:
@@ -66,6 +63,8 @@ class MVPS():
 		formatted = []
 		wantedLines = excludeUnwantedLines(lines)
 		for line in wantedLines:
+			if line.__contains__("localhost"):
+				continue
 			line = str.replace(line, "0.0.0.0 ", "")
 			line = line.partition("#")[0] # removes trailing comment if present
 			formatted.append(line)
