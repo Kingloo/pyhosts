@@ -1,7 +1,7 @@
 # pyhosts
 Creates include-files of hosts to ban for various DNS servers.
 
-Available DNS servers are *Bind*, *Unbound* and Windows *HOSTS* file.
+Available DNS servers are __Bind__, __Unbound__ and Windows __HOSTS__ file.
 
 ## pyhosts.py
 pyhosts.py is a copy-paste of everything into one file, removing and adjusting import statements as makes sense.
