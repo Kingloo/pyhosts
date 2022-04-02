@@ -11,7 +11,11 @@ def getSources():
 		FirebogPrigentMalware(),
 		FirebogPrigentCrypto(),
 		FirebogAdmiral(),
-		FirebogEasyPrivacy()
+		FirebogEasyPrivacy(),
+		FirebogEasyList(),
+		OSIntDigitalSide(),
+		PolishFiltersTeamKADHosts(),
+		PhishingArmyBlocklistExtended()
 	]
 
 def downloadSource(session: requests.Session, source) -> List[str]:
@@ -49,6 +53,9 @@ def isValid(line: str) -> bool:
 def excludeUnwantedLines(lines: List[str]) -> List[str]:
 	return list(filter(isValid, lines))
 
+def sourceToString(source) -> str:
+	return "{} ({})".format(source.name, source.url)
+
 class MVPS():
 	def __init__(self) -> None:
 		self._name = "MVPS"
@@ -70,7 +77,7 @@ class MVPS():
 			formatted.append(line)
 		return formatted
 	def __str__(self) -> str:
-		return "{} ({})".format(self.name, self.url)
+		return sourceToString(self.name, self.url)
 
 class FirebogAdGuardDNS():
 	def __init__(self) -> None:
@@ -85,7 +92,7 @@ class FirebogAdGuardDNS():
 	def format(self, lines: List[str]) -> List[str]:
 		return excludeUnwantedLines(lines)
 	def __str__(self) -> str:
-		return "{} ({})".format(self.name, self.url)
+		return sourceToString(self.name, self.url)
 
 class FirebogPrigentAds():
 	def __init__(self) -> None:
@@ -100,7 +107,7 @@ class FirebogPrigentAds():
 	def format(self, lines: List[str]) -> List[str]:
 		return excludeUnwantedLines(lines)
 	def __str__(self) -> str:
-		return "{} ({})".format(self.name, self.url)
+		return sourceToString(self.name, self.url)
 
 class FirebogPrigentCrypto():
 	def __init__(self) -> None:
@@ -113,9 +120,14 @@ class FirebogPrigentCrypto():
 	def url(self):
 		return self._url
 	def format(self, lines: List[str]) -> List[str]:
-		return excludeUnwantedLines(lines)
+		formatted = []
+		wantedLines = excludeUnwantedLines(lines)
+		for line in wantedLines:
+			line = str.replace(line, "0.0.0.0", "")
+			formatted.append(line)
+		return formatted
 	def __str__(self) -> str:
-		return "{} ({})".format(self.name, self.url)
+		return sourceToString(self.name, self.url)
 
 class FirebogPrigentMalware():
 	def __init__(self) -> None:
@@ -130,7 +142,7 @@ class FirebogPrigentMalware():
 	def format(self, lines: List[str]) -> List[str]:
 		return excludeUnwantedLines(lines)
 	def __str__(self) -> str:
-		return "{} ({})".format(self.name, self.url)
+		return sourceToString(self.name, self.url)
 
 class FirebogAdmiral():
 	def __init__(self) -> None:
@@ -145,7 +157,7 @@ class FirebogAdmiral():
 	def format(self, lines: List[str]) -> List[str]:
 		return excludeUnwantedLines(lines)
 	def __str__(self) -> str:
-		return "{} ({})".format(self.name, self.url)
+		return sourceToString(self.name, self.url)
 
 class FirebogEasyPrivacy():
 	def __init__(self) -> None:
@@ -160,4 +172,69 @@ class FirebogEasyPrivacy():
 	def format(self, lines: List[str]) -> List[str]:
 		return excludeUnwantedLines(lines)
 	def __str__(self) -> str:
-		return "{} ({})".format(self.name, self.url)
+		return sourceToString(self.name, self.url)
+
+class FirebogEasyList():
+	def __init__(self) -> None:
+		self._name = "Firebog Easy List"
+		self._url = "https://v.firebog.net/hosts/Easylist.txt"
+	@property
+	def name(self):
+		return self._name
+	@property
+	def url(self):
+		return self._url
+	def format(self, lines: List[str]) -> List[str]:
+		return excludeUnwantedLines(lines)
+	def __str__(self) -> str:
+		return sourceToString(self.name, self.url)
+
+class OSIntDigitalSide():
+	def __init__(self) -> None:
+		self._name = "OSIntDigitalSide"
+		self._url = "https://osint.digitalside.it/Threat-Intel/lists/latestdomains.txt"
+	@property
+	def name(self):
+		return self._name
+	@property
+	def url(self):
+		return self._url
+	def format(self, lines: List[str]) -> List[str]:
+		return excludeUnwantedLines(lines)
+	def __str__(self) -> str:
+		return sourceToString(self.name, self.url)
+
+class PolishFiltersTeamKADHosts():
+	def __init__(self) -> None:
+		self._name = "Polish Filters Team KAD Hosts"
+		self._url = "https://raw.githubusercontent.com/PolishFiltersTeam/KADhosts/master/KADhosts.txt"
+	@property
+	def name(self):
+		return self._name
+	@property
+	def url(self):
+		return self._url
+	def format(self, lines: List[str]) -> List[str]:
+		formatted = []
+		wantedLines = excludeUnwantedLines(lines)
+		for line in wantedLines:
+			line = str.replace(line, "0.0.0.0 ", "")
+			formatted.append(line)
+		return formatted
+	def __str__(self) -> str:
+		return sourceToString(self.name, self.url)
+
+class PhishingArmyBlocklistExtended():
+	def __init__(self) -> None:
+		self._name = "Phishing Army Blocklist Extended"
+		self._url = "https://phishing.army/download/phishing_army_blocklist_extended.txt"
+	@property
+	def name(self):
+		return self._name
+	@property
+	def url(self):
+		return self._url
+	def format(self, lines: List[str]) -> List[str]:
+		return excludeUnwantedLines(lines)
+	def __str__(self) -> str:
+		return sourceToString(self.name, self.url)
