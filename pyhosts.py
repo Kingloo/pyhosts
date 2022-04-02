@@ -107,7 +107,7 @@ def getSources():
 
 def downloadSource(session: requests.Session, source) -> List[str]:
 	response = session.get(source.url)
-	if response.status_code is not 200:
+	if response.status_code != 200:
 		raise DownloadError(source, response.status_code)
 	return response.text.splitlines()
 
