@@ -18,40 +18,42 @@ def getSources():
 		PhishingArmyBlocklistExtended()
 	]
 
+def isValid(line: str) -> bool:
+	isComment = line.startswith('#')
+	isEmpty = len(line) == 0
+	isLocalhost = line == "localhost"
+	return isComment == False and isEmpty == False and isLocalhost == False
+
+def removeTrailingDot(line: str) -> str:
+	return line[:-1] if line.endswith('.') else line
+
 def downloadSource(session: requests.Session, source) -> List[str]:
 	response = session.get(source.url)
 	if response.status_code != 200:
 		raise DownloadError(source, response.status_code)
 	return response.text.splitlines()
 
-def createSourceDownloadSummary(source, count) -> str:
-	longestNameLength = max(len(s.name) for s in getSources())
-	paddingRequired = longestNameLength - len(source.name)
-	padding = " " * paddingRequired # creates a string of empty spaces of paddingRequired's length
-	return "-\t{}{}\t{}".format(source.name, padding, count)
-
 def downloadSources(sources) -> List[str]:
 	if len(sources) == 0:
 		raise NoSourcesConfiguredError()
 	lines: List[str] = []
 	with requests.Session() as session:
-		printError("begin downloading from {} sources".format(len(sources)))
+		printError("begin downloading from {} {}".format(len(sources), "source" if len(sources) == 1 else "sources"))
 		for source in sources:
 			downloadedLines = downloadSource(session, source)
-			formattedLines = source.format(downloadedLines)
+			linesWithoutTrailingDot = map(removeTrailingDot, downloadedLines)
+			wantedLines = filter(isValid, linesWithoutTrailingDot)
+			formattedLines = source.format(wantedLines)
 			lines.extend(formattedLines)
-			printError(createSourceDownloadSummary(source, len(formattedLines)))
+			printError(createSourceDownloadSummary(source, len(lines)))
 	printError("finished downloading ({} total)".format(len(lines)))
 	return lines
 
-def isValid(line: str) -> bool:
-	isComment = line.startswith("#")
-	isEmpty = len(line) == 0
-	isLocalhost = line == "localhost"
-	return isComment == False and isEmpty == False and isLocalhost == False
-
-def excludeUnwantedLines(lines: List[str]) -> List[str]:
-	return list(filter(isValid, lines))
+def createSourceDownloadSummary(source, count) -> str:
+	longestNameLength = max(len(s.name) for s in getSources())
+	paddingRequired = longestNameLength - len(source.name)
+	padding = " " * paddingRequired # creates a string of empty spaces of paddingRequired's length
+	return "-\t{}{}\t{}".format(source.name, padding, count)
 
 def sourceToString(source) -> str:
 	return "{} ({})".format(source.name, source.url)
@@ -68,8 +70,7 @@ class MVPS():
 		return self._url
 	def format(self, lines: List[str]) -> List[str]:
 		formatted = []
-		wantedLines = excludeUnwantedLines(lines)
-		for line in wantedLines:
+		for line in lines:
 			if line.__contains__("localhost"):
 				continue
 			line = str.replace(line, "0.0.0.0 ", "")
@@ -90,7 +91,7 @@ class FirebogAdGuardDNS():
 	def url(self):
 		return self._url
 	def format(self, lines: List[str]) -> List[str]:
-		return excludeUnwantedLines(lines)
+		return lines
 	def __str__(self) -> str:
 		return sourceToString(self.name, self.url)
 
@@ -105,7 +106,7 @@ class FirebogPrigentAds():
 	def url(self):
 		return self._url
 	def format(self, lines: List[str]) -> List[str]:
-		return excludeUnwantedLines(lines)
+		return lines
 	def __str__(self) -> str:
 		return sourceToString(self.name, self.url)
 
@@ -121,8 +122,7 @@ class FirebogPrigentCrypto():
 		return self._url
 	def format(self, lines: List[str]) -> List[str]:
 		formatted = []
-		wantedLines = excludeUnwantedLines(lines)
-		for line in wantedLines:
+		for line in lines:
 			line = str.replace(line, "0.0.0.0", "")
 			formatted.append(line)
 		return formatted
@@ -140,7 +140,7 @@ class FirebogPrigentMalware():
 	def url(self):
 		return self._url
 	def format(self, lines: List[str]) -> List[str]:
-		return excludeUnwantedLines(lines)
+		return lines
 	def __str__(self) -> str:
 		return sourceToString(self.name, self.url)
 
@@ -155,7 +155,7 @@ class FirebogAdmiral():
 	def url(self):
 		return self._url
 	def format(self, lines: List[str]) -> List[str]:
-		return excludeUnwantedLines(lines)
+		return lines
 	def __str__(self) -> str:
 		return sourceToString(self.name, self.url)
 
@@ -170,7 +170,7 @@ class FirebogEasyPrivacy():
 	def url(self):
 		return self._url
 	def format(self, lines: List[str]) -> List[str]:
-		return excludeUnwantedLines(lines)
+		return lines
 	def __str__(self) -> str:
 		return sourceToString(self.name, self.url)
 
@@ -185,7 +185,7 @@ class FirebogEasyList():
 	def url(self):
 		return self._url
 	def format(self, lines: List[str]) -> List[str]:
-		return excludeUnwantedLines(lines)
+		return lines
 	def __str__(self) -> str:
 		return sourceToString(self.name, self.url)
 
@@ -200,7 +200,7 @@ class OSIntDigitalSide():
 	def url(self):
 		return self._url
 	def format(self, lines: List[str]) -> List[str]:
-		return excludeUnwantedLines(lines)
+		return lines
 	def __str__(self) -> str:
 		return sourceToString(self.name, self.url)
 
@@ -216,8 +216,7 @@ class PolishFiltersTeamKADHosts():
 		return self._url
 	def format(self, lines: List[str]) -> List[str]:
 		formatted = []
-		wantedLines = excludeUnwantedLines(lines)
-		for line in wantedLines:
+		for line in lines:
 			line = str.replace(line, "0.0.0.0 ", "")
 			formatted.append(line)
 		return formatted
@@ -235,6 +234,6 @@ class PhishingArmyBlocklistExtended():
 	def url(self):
 		return self._url
 	def format(self, lines: List[str]) -> List[str]:
-		return excludeUnwantedLines(lines)
+		return lines
 	def __str__(self) -> str:
 		return sourceToString(self.name, self.url)
