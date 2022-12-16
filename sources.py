@@ -45,7 +45,7 @@ def downloadSources(sources) -> List[str]:
 			wantedLines = filter(isValid, linesWithoutTrailingDot)
 			formattedLines = source.format(wantedLines)
 			lines.extend(formattedLines)
-			printError(createSourceDownloadSummary(source, len(lines)))
+			printError(createSourceDownloadSummary(source, len(formattedLines)))
 	printError("finished downloading ({} total)".format(len(lines)))
 	return lines
 
