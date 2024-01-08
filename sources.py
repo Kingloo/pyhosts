@@ -22,7 +22,8 @@ def isValid(line: str) -> bool:
 	isComment = line.startswith('#')
 	isEmpty = len(line) == 0
 	isLocalhost = line == "localhost"
-	return isComment == False and isEmpty == False and isLocalhost == False
+	containsDoubleDots = ".." in line
+	return isComment == False and isEmpty == False and isLocalhost == False and containsDoubleDots == False
 
 def removeTrailingDot(line: str) -> str:
 	return line[:-1] if line.endswith('.') else line
