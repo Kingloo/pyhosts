@@ -105,12 +105,28 @@ def getSources():
 		PhishingArmyBlocklistExtended()
 	]
 
+def isComment(line):
+	return line.startswith('#')
+
+def isEmpty(line):
+	return len(line) == 0
+
+def isLocalhost(line):
+	return line == "localhost"
+
+def containsDoubleDots(line):
+	return ".." in line
+
 def isValid(line: str) -> bool:
-	isComment = line.startswith('#')
-	isEmpty = len(line) == 0
-	isLocalhost = line == "localhost"
-	containsDoubleDots = ".." in line
-	return isComment == False and isEmpty == False and isLocalhost == False and containsDoubleDots == False
+	""" returns true if every validator returns false """
+	return not any([ validator(line) for validator in validatorFuncs ])
+
+validatorFuncs = [
+	isComment,
+	isEmpty,
+	isLocalhost,
+	containsDoubleDots
+]
 
 def removeTrailingDot(line: str) -> str:
 	return line[:-1] if line.endswith('.') else line
