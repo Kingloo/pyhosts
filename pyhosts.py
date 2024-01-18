@@ -105,16 +105,22 @@ def getSources():
 		PhishingArmyBlocklistExtended()
 	]
 
-def isComment(line):
+def isComment(line: str) -> bool:
 	return line.startswith('#')
 
-def isEmpty(line):
+def isEmpty(line: str) -> bool:
 	return len(line) == 0
 
-def isLocalhost(line):
+def isLocalhost(line: str) -> bool:
 	return line == "localhost"
 
-def containsDoubleDots(line):
+def containsDoubleDots(line: str) -> bool:
+	"""
+	exclude domains with double dots
+	e.g. example..com
+	"""
+	# an alternative would be to remove the second dot
+	# and accept the domain then
 	return ".." in line
 
 def isValid(line: str) -> bool:
@@ -131,6 +137,14 @@ validatorFuncs = [
 def removeTrailingDot(line: str) -> str:
 	return line[:-1] if line.endswith('.') else line
 
+def makeLowerCase(line: str) -> str:
+	return line.lower()
+
+def normalize(line: str) -> str:
+	line = removeTrailingDot(line)
+	line = makeLowerCase(line)
+	return line
+
 def downloadSource(session: requests.Session, source) -> List[str]:
 	response = session.get(source.url)
 	if response.status_code != 200:
@@ -138,6 +152,7 @@ def downloadSource(session: requests.Session, source) -> List[str]:
 	return response.text.splitlines()
 
 def downloadSources(sources) -> List[str]:
+	""" downloads lists of domain names from the sources, then normalizes and validates them """
 	if len(sources) == 0:
 		raise NoSourcesConfiguredError()
 	lines: List[str] = []
@@ -145,12 +160,11 @@ def downloadSources(sources) -> List[str]:
 		printError("begin downloading from {} {}".format(len(sources), "source" if len(sources) == 1 else "sources"))
 		for source in sources:
 			downloadedLines = downloadSource(session, source)
-			linesWithoutTrailingDot = map(removeTrailingDot, downloadedLines)
-			wantedLines = filter(isValid, linesWithoutTrailingDot)
+			normalizedLines = map(normalize, downloadedLines)
+			wantedLines = filter(isValid, normalizedLines)
 			formattedLines = list(source.format(wantedLines))
 			lines.extend(formattedLines)
 			printError(createSourceDownloadSummary(source, len(formattedLines)))
-	printError("finished downloading ({} total)".format(len(lines)))
 	return lines
 
 def createSourceDownloadSummary(source, count) -> str:
@@ -411,7 +425,7 @@ def combineWithScriptDirectory(filename):
 def loadWhitelist() -> List[str]:
 	whitelistPath = combineWithScriptDirectory("whitelist.txt")
 	try:
-		whitelist = readLines(whitelistPath)
+		whitelist: List[str] = readLines(whitelistPath)
 		printError("loaded {} whitelisted domain(s)".format(len(whitelist)))
 		return whitelist
 	except FileNotFoundError:
@@ -427,6 +441,9 @@ def loadBlacklist() -> List[str]:
 	except FileNotFoundError:
 		printError("no blacklist file found")
 	return []
+
+def removeDupes(lines: List[str]) -> List[str]:
+	return list(OrderedDict.fromkeys(lines))
 
 def readLines(path) -> List[str]:
 	with open(path, "r") as file:
@@ -456,7 +473,7 @@ def writeLines(lines, filename):
 
 def process(serverFormatter, filename):
 	printError("using {}".format(serverFormatter.name))
-	lines = []
+	lines: List[str] = []
 	lines.extend(loadBlacklist())
 	try:
 		downloaded = downloadSources(getSources())
@@ -464,18 +481,18 @@ def process(serverFormatter, filename):
 	except (DownloadError, requests.HTTPError) as e:
 		printError("downloading failed ({})".format(e.message))
 		sys.exit(-1)
-	distinctLines = list(OrderedDict.fromkeys(lines)) # removes duplicates
-	printError("{} distinct domains".format(len(distinctLines)))
+	uniqueLines = removeDupes(lines)
+	printError("finished downloading ({} total, {} unique)".format(len(lines), len(uniqueLines)))
 	savedViaWhitelist = []
 	for whitelisted in loadWhitelist():
-		if whitelisted in distinctLines:
-			distinctLines.remove(whitelisted)
+		if whitelisted in uniqueLines:
+			uniqueLines.remove(whitelisted)
 			savedViaWhitelist.append(whitelisted)
 	if len(savedViaWhitelist) > 0:
 		printError("{} domain(s) saved via whitelisting ({})".format(len(savedViaWhitelist), ", ".join(savedViaWhitelist)))
 	else:
 		printError("no domains saving via whitelisting")
-	formattedForServer = serverFormatter.format(distinctLines)
+	formattedForServer = serverFormatter.format(uniqueLines)
 	writeLines(formattedForServer, filename)
 
 def parseArguments(args):
