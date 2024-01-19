@@ -176,16 +176,23 @@ def createSourceDownloadSummary(source, count) -> str:
 def sourceToString(source) -> str:
 	return "{} ({})".format(source.name, source.url)
 
-class MVPS():
+class BaseSource():
+	@property
+	def name(self) -> str:
+		return self._name
+	@property
+	def url(self) -> str:
+		return self._url
+	def format(self, lines: List[str]) -> List[str]:
+		return lines
+	def __str__(self) -> str:
+		return sourceToString(self)
+
+class MVPS(BaseSource):
 	def __init__(self) -> None:
 		self._name = "MVPS"
 		self._url = "http://winhelp2002.mvps.org/hosts.txt"
-	@property
-	def name(self):
-		return self._name
-	@property
-	def url(self):
-		return self._url
+	@classmethod
 	def format(self, lines: List[str]) -> List[str]:
 		formatted = []
 		for line in lines:
@@ -195,166 +202,70 @@ class MVPS():
 			line = line.partition("#")[0] # removes trailing comment if present
 			formatted.append(line)
 		return formatted
-	def __str__(self) -> str:
-		return sourceToString(self.name, self.url)
 
-class FirebogAdGuardDNS():
+class FirebogAdGuardDNS(BaseSource):
 	def __init__(self) -> None:
 		self._name = "Firebog AdGuard DNS"
 		self._url = "https://v.firebog.net/hosts/AdguardDNS.txt"
-	@property
-	def name(self):
-		return self._name
-	@property
-	def url(self):
-		return self._url
-	def format(self, lines: List[str]) -> List[str]:
-		return lines
-	def __str__(self) -> str:
-		return sourceToString(self.name, self.url)
 
-class FirebogPrigentAds():
+class FirebogPrigentAds(BaseSource):
 	def __init__(self) -> None:
 		self._name = "Firebog Prigent Ads"
 		self._url = "https://v.firebog.net/hosts/Prigent-Ads.txt"
-	@property
-	def name(self):
-		return self._name
-	@property
-	def url(self):
-		return self._url
-	def format(self, lines: List[str]) -> List[str]:
-		return lines
-	def __str__(self) -> str:
-		return sourceToString(self.name, self.url)
 
-class FirebogPrigentCrypto():
+class FirebogPrigentCrypto(BaseSource):
 	def __init__(self) -> None:
 		self._name = "Firebog Prigent Crypto"
 		self._url = "https://v.firebog.net/hosts/Prigent-Crypto.txt"
-	@property
-	def name(self):
-		return self._name
-	@property
-	def url(self):
-		return self._url
+	@classmethod
 	def format(self, lines: List[str]) -> List[str]:
 		formatted = []
 		for line in lines:
 			line = str.replace(line, "0.0.0.0", "")
 			formatted.append(line)
 		return formatted
-	def __str__(self) -> str:
-		return sourceToString(self.name, self.url)
 
-class FirebogPrigentMalware():
+class FirebogPrigentMalware(BaseSource):
 	def __init__(self) -> None:
 		self._name = "Firebog Prigent Malware"
 		self._url = "https://v.firebog.net/hosts/Prigent-Malware.txt"
-	@property
-	def name(self):
-		return self._name
-	@property
-	def url(self):
-		return self._url
-	def format(self, lines: List[str]) -> List[str]:
-		return lines
-	def __str__(self) -> str:
-		return sourceToString(self.name, self.url)
 
-class FirebogAdmiral():
+class FirebogAdmiral(BaseSource):
 	def __init__(self) -> None:
 		self._name = "Firebog Admiral"
 		self._url = "https://v.firebog.net/hosts/Admiral.txt"
-	@property
-	def name(self):
-		return self._name
-	@property
-	def url(self):
-		return self._url
-	def format(self, lines: List[str]) -> List[str]:
-		return lines
-	def __str__(self) -> str:
-		return sourceToString(self.name, self.url)
 
-class FirebogEasyPrivacy():
+class FirebogEasyPrivacy(BaseSource):
 	def __init__(self) -> None:
 		self._name = "Firebog Easy Privacy"
 		self._url = "https://v.firebog.net/hosts/Easyprivacy.txt"
-	@property
-	def name(self):
-		return self._name
-	@property
-	def url(self):
-		return self._url
-	def format(self, lines: List[str]) -> List[str]:
-		return lines
-	def __str__(self) -> str:
-		return sourceToString(self.name, self.url)
 
-class FirebogEasyList():
+class FirebogEasyList(BaseSource):
 	def __init__(self) -> None:
 		self._name = "Firebog Easy List"
 		self._url = "https://v.firebog.net/hosts/Easylist.txt"
-	@property
-	def name(self):
-		return self._name
-	@property
-	def url(self):
-		return self._url
-	def format(self, lines: List[str]) -> List[str]:
-		return lines
-	def __str__(self) -> str:
-		return sourceToString(self.name, self.url)
 
-class OSIntDigitalSide():
+class OSIntDigitalSide(BaseSource):
 	def __init__(self) -> None:
 		self._name = "OSIntDigitalSide"
 		self._url = "https://osint.digitalside.it/Threat-Intel/lists/latestdomains.txt"
-	@property
-	def name(self):
-		return self._name
-	@property
-	def url(self):
-		return self._url
-	def format(self, lines: List[str]) -> List[str]:
-		return lines
-	def __str__(self) -> str:
-		return sourceToString(self.name, self.url)
 
-class PolishFiltersTeamKADHosts():
+class PolishFiltersTeamKADHosts(BaseSource):
 	def __init__(self) -> None:
 		self._name = "Polish Filters Team KAD Hosts"
 		self._url = "https://raw.githubusercontent.com/PolishFiltersTeam/KADhosts/master/KADhosts.txt"
-	@property
-	def name(self):
-		return self._name
-	@property
-	def url(self):
-		return self._url
+	@classmethod
 	def format(self, lines: List[str]) -> List[str]:
 		formatted = []
 		for line in lines:
 			line = str.replace(line, "0.0.0.0 ", "")
 			formatted.append(line)
 		return formatted
-	def __str__(self) -> str:
-		return sourceToString(self.name, self.url)
 
-class PhishingArmyBlocklistExtended():
+class PhishingArmyBlocklistExtended(BaseSource):
 	def __init__(self) -> None:
 		self._name = "Phishing Army Blocklist Extended"
 		self._url = "https://phishing.army/download/phishing_army_blocklist_extended.txt"
-	@property
-	def name(self):
-		return self._name
-	@property
-	def url(self):
-		return self._url
-	def format(self, lines: List[str]) -> List[str]:
-		return lines
-	def __str__(self) -> str:
-		return sourceToString(self.name, self.url)
 
 def determineServerFormatter(serverArg: str):
 	serverArgLower = serverArg.lower()
@@ -367,12 +278,16 @@ def determineServerFormatter(serverArg: str):
 	else:
 		raise UnknownServerTypeError(serverArg)
 
-class UnboundFormatter:
-	def __init__(self) -> None:
-		self._name = "Unbound Formatter"
+class BaseFormatter():
 	@property
 	def name(self):
 		return self._name
+	def __str__(self) -> str:
+		return self.name
+
+class UnboundFormatter(BaseFormatter):
+	def __init__(self) -> None:
+		self._name = "Unbound Formatter"
 	def format(self, lines: List[str]) -> List[str]:
 		formatted = []
 		for line in lines:
@@ -381,15 +296,10 @@ class UnboundFormatter:
 			line = 'local-zone: "{}." always_nxdomain'.format(line)
 			formatted.append(line)
 		return formatted
-	def __str__(self) -> str:
-		return self.name
 
-class BindFormatter:
+class BindFormatter(BaseFormatter):
 	def __init__(self) -> None:
 		self._name = "BIND Formatter"
-	@property
-	def name(self):
-		return self._name
 	def format(self, lines: List[str]) -> List[str]:
 		formatted = []
 		for line in lines:
@@ -398,15 +308,10 @@ class BindFormatter:
 			line = 'zone "{}" {{ type master; file "/etc/bind/zones/db.poison"; }};'.format(line)
 			formatted.append(line)
 		return formatted
-	def __str__(self) -> str:
-		return self.name
 
-class WindowsHostsFileFormatter:
+class WindowsHostsFileFormatter(BaseFormatter):
 	def __init__(self) -> None:
 		self._name = "Windows Hosts File Formatter"
-	@property
-	def name(self):
-		return self._name
 	def format(self, lines: List[str]) -> List[str]:
 		formatted = ["127.0.0.1 localhost", "::1 localhost", ""]
 		for line in lines:
@@ -415,8 +320,6 @@ class WindowsHostsFileFormatter:
 			line = "0.0.0.0 {}".format(line)
 			formatted.append(line)
 		return formatted
-	def __str__(self) -> str:
-		return self.name
 
 def combineWithScriptDirectory(filename):
 	thisScriptsDirectory = os.path.dirname(os.path.abspath(__file__))
