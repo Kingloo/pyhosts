@@ -5,90 +5,121 @@ import requests
 from collections import OrderedDict
 from typing import List
 
+
 class UnknownServerTypeError(Exception):
-	""" Raised when the (REQUIRED) DNS server type is not recognised/supported by pyhosts """
+	"""Raised when the (REQUIRED) DNS server type is not recognised/supported by pyhosts"""
+
 	def __init__(self, unknownServerType) -> None:
 		self._unknownServerType = unknownServerType
 		super().__init__(self.unknownServerType)
+
 	@property
 	def unknownServerType(self):
 		return self._unknownServerType
+
 	def __str__(self) -> str:
 		return self.message
 
+
 class UsageError(Exception):
-	""" Raised when the command line arguments don't match required usage """
+	"""Raised when the command line arguments don't match required usage"""
+
 	def __init__(self, message) -> None:
 		self._message = message
 		super().__init__(self.message)
+
 	@property
 	def message(self):
 		return self._message
+
 	def __str__(self) -> str:
 		return self.message
 
+
 class DownloadError(Exception):
-	""" Raised when downloading a source return an HTTP status code other than 200 """
+	"""Raised when downloading a source return an HTTP status code other than 200"""
+
 	def __init__(self, source, status_code) -> None:
 		self._source = source
 		self._status_code = status_code
 		self._message = "{} ({})".format(source, status_code)
 		super().__init__(self.message)
+
 	@property
 	def source(self):
 		return self._source
+
 	@property
 	def status_code(self):
 		return self._status_code
+
 	@property
 	def message(self):
 		return self._message
+
 	def __str__(self) -> str:
 		return self.message
 
+
 class NoSourcesConfiguredError(Exception):
-	""" Raised when there are no sources configured """
+	"""Raised when there are no sources configured"""
+
 	def __init__(self) -> None:
 		self._message = "there are no sources configured"
 		super().__init__(self.message)
+
 	@property
 	def message(self):
 		return self._message
+
 	def __str__(self) -> str:
 		return self.message
 
+
 class FileWriteError(Exception):
-	""" Raised when the output file could not be written to """
+	"""Raised when the output file could not be written to"""
+
 	def __init__(self, filename) -> None:
 		self._message = "file could not be written to: {}".format(filename)
 		super().__init__(self.message)
+
 	@property
 	def message(self):
 		return self._message
+
 	def __str__(self) -> str:
 		return self.message
 
+
 class FileReadError(Exception):
-	""" Raised when file could not be read """
+	"""Raised when file could not be read"""
+
 	def __init__(self, filename) -> None:
 		self._message = "file could not be read: {}".format(filename)
 		super().__init__(self.message)
+
 	@property
 	def message(self):
 		return self._message
+
 	def __str__(self) -> str:
 		return self.message
 
+
 class LocalhostFoundError(Exception):
-	""" Raised when localhost found its way to a formatter """
+	"""Raised when localhost found its way to a formatter"""
+
 	def __init__(self) -> None:
 		self._message = "tried to pass localhost to a formatter"
 		super().__init__(self.message)
+
 	@property
 	def message(self):
 		return self._message
+
 	def __str__(self) -> str:
 		return self.message
+
 
 def getSources():
 	return [
@@ -102,17 +133,21 @@ def getSources():
 		FirebogEasyList(),
 		OSIntDigitalSide(),
 		PolishFiltersTeamKADHosts(),
-		PhishingArmyBlocklistExtended()
+		PhishingArmyBlocklistExtended(),
 	]
 
+
 def isComment(line: str) -> bool:
-	return line.startswith('#')
+	return line.startswith("#")
+
 
 def isEmpty(line: str) -> bool:
 	return len(line) == 0
 
+
 def isLocalhost(line: str) -> bool:
 	return line == "localhost"
+
 
 def containsDoubleDots(line: str) -> bool:
 	"""
@@ -123,27 +158,28 @@ def containsDoubleDots(line: str) -> bool:
 	# and accept the domain then
 	return ".." in line
 
-def isValid(line: str) -> bool:
-	""" returns true if every validator returns false """
-	return not any([ validator(line) for validator in validatorFuncs ])
 
-validatorFuncs = [
-	isComment,
-	isEmpty,
-	isLocalhost,
-	containsDoubleDots
-]
+def isValid(line: str) -> bool:
+	"""returns true if every validator returns false"""
+	return not any([validator(line) for validator in validatorFuncs])
+
+
+validatorFuncs = [isComment, isEmpty, isLocalhost, containsDoubleDots]
+
 
 def removeTrailingDot(line: str) -> str:
-	return line[:-1] if line.endswith('.') else line
+	return line[:-1] if line.endswith(".") else line
+
 
 def makeLowerCase(line: str) -> str:
 	return line.lower()
+
 
 def normalize(line: str) -> str:
 	line = removeTrailingDot(line)
 	line = makeLowerCase(line)
 	return line
+
 
 def downloadSource(session: requests.Session, source) -> List[str]:
 	response = session.get(source.url)
@@ -151,8 +187,9 @@ def downloadSource(session: requests.Session, source) -> List[str]:
 		raise DownloadError(source, response.status_code)
 	return response.text.splitlines()
 
+
 def downloadSources(sources) -> List[str]:
-	""" downloads lists of domain names from the sources, then normalizes and validates them """
+	"""downloads lists of domain names from the sources, then normalizes and validates them"""
 	if len(sources) == 0:
 		raise NoSourcesConfiguredError()
 	lines: List[str] = []
@@ -167,31 +204,39 @@ def downloadSources(sources) -> List[str]:
 			printError(createSourceDownloadSummary(source, len(formattedLines)))
 	return lines
 
+
 def createSourceDownloadSummary(source, count) -> str:
 	longestNameLength = max(len(s.name) for s in getSources())
 	paddingRequired = longestNameLength - len(source.name)
-	padding = " " * paddingRequired # creates a string of empty spaces of paddingRequired's length
+	padding = " " * paddingRequired  # creates a string of empty spaces of paddingRequired's length
 	return "-\t{}{}\t{}".format(source.name, padding, count)
+
 
 def sourceToString(source) -> str:
 	return "{} ({})".format(source.name, source.url)
 
-class BaseSource():
+
+class BaseSource:
 	@property
 	def name(self) -> str:
 		return self._name
+
 	@property
 	def url(self) -> str:
 		return self._url
+
 	def format(self, lines: List[str]) -> List[str]:
 		return lines
+
 	def __str__(self) -> str:
 		return sourceToString(self)
+
 
 class MVPS(BaseSource):
 	def __init__(self) -> None:
 		self._name = "MVPS"
 		self._url = "http://winhelp2002.mvps.org/hosts.txt"
+
 	@classmethod
 	def format(self, lines: List[str]) -> List[str]:
 		formatted = []
@@ -199,24 +244,28 @@ class MVPS(BaseSource):
 			if line.__contains__("localhost"):
 				continue
 			line = str.replace(line, "0.0.0.0 ", "")
-			line = line.partition("#")[0] # removes trailing comment if present
+			line = line.partition("#")[0]  # removes trailing comment if present
 			formatted.append(line)
 		return formatted
+
 
 class FirebogAdGuardDNS(BaseSource):
 	def __init__(self) -> None:
 		self._name = "Firebog AdGuard DNS"
 		self._url = "https://v.firebog.net/hosts/AdguardDNS.txt"
 
+
 class FirebogPrigentAds(BaseSource):
 	def __init__(self) -> None:
 		self._name = "Firebog Prigent Ads"
 		self._url = "https://v.firebog.net/hosts/Prigent-Ads.txt"
 
+
 class FirebogPrigentCrypto(BaseSource):
 	def __init__(self) -> None:
 		self._name = "Firebog Prigent Crypto"
 		self._url = "https://v.firebog.net/hosts/Prigent-Crypto.txt"
+
 	@classmethod
 	def format(self, lines: List[str]) -> List[str]:
 		formatted = []
@@ -225,35 +274,42 @@ class FirebogPrigentCrypto(BaseSource):
 			formatted.append(line)
 		return formatted
 
+
 class FirebogPrigentMalware(BaseSource):
 	def __init__(self) -> None:
 		self._name = "Firebog Prigent Malware"
 		self._url = "https://v.firebog.net/hosts/Prigent-Malware.txt"
+
 
 class FirebogAdmiral(BaseSource):
 	def __init__(self) -> None:
 		self._name = "Firebog Admiral"
 		self._url = "https://v.firebog.net/hosts/Admiral.txt"
 
+
 class FirebogEasyPrivacy(BaseSource):
 	def __init__(self) -> None:
 		self._name = "Firebog Easy Privacy"
 		self._url = "https://v.firebog.net/hosts/Easyprivacy.txt"
+
 
 class FirebogEasyList(BaseSource):
 	def __init__(self) -> None:
 		self._name = "Firebog Easy List"
 		self._url = "https://v.firebog.net/hosts/Easylist.txt"
 
+
 class OSIntDigitalSide(BaseSource):
 	def __init__(self) -> None:
 		self._name = "OSIntDigitalSide"
 		self._url = "https://osint.digitalside.it/Threat-Intel/lists/latestdomains.txt"
 
+
 class PolishFiltersTeamKADHosts(BaseSource):
 	def __init__(self) -> None:
 		self._name = "Polish Filters Team KAD Hosts"
 		self._url = "https://raw.githubusercontent.com/PolishFiltersTeam/KADhosts/master/KADhosts.txt"
+
 	@classmethod
 	def format(self, lines: List[str]) -> List[str]:
 		formatted = []
@@ -262,10 +318,12 @@ class PolishFiltersTeamKADHosts(BaseSource):
 			formatted.append(line)
 		return formatted
 
+
 class PhishingArmyBlocklistExtended(BaseSource):
 	def __init__(self) -> None:
 		self._name = "Phishing Army Blocklist Extended"
 		self._url = "https://phishing.army/download/phishing_army_blocklist_extended.txt"
+
 
 def determineServerFormatter(serverArg: str):
 	serverArgLower = serverArg.lower()
@@ -278,16 +336,20 @@ def determineServerFormatter(serverArg: str):
 	else:
 		raise UnknownServerTypeError(serverArg)
 
-class BaseFormatter():
+
+class BaseFormatter:
 	@property
 	def name(self):
 		return self._name
+
 	def __str__(self) -> str:
 		return self.name
+
 
 class UnboundFormatter(BaseFormatter):
 	def __init__(self) -> None:
 		self._name = "Unbound Formatter"
+
 	def format(self, lines: List[str]) -> List[str]:
 		formatted = []
 		for line in lines:
@@ -297,9 +359,11 @@ class UnboundFormatter(BaseFormatter):
 			formatted.append(line)
 		return formatted
 
+
 class BindFormatter(BaseFormatter):
 	def __init__(self) -> None:
 		self._name = "BIND Formatter"
+
 	def format(self, lines: List[str]) -> List[str]:
 		formatted = []
 		for line in lines:
@@ -309,9 +373,11 @@ class BindFormatter(BaseFormatter):
 			formatted.append(line)
 		return formatted
 
+
 class WindowsHostsFileFormatter(BaseFormatter):
 	def __init__(self) -> None:
 		self._name = "Windows Hosts File Formatter"
+
 	def format(self, lines: List[str]) -> List[str]:
 		formatted = ["127.0.0.1 localhost", "::1 localhost", ""]
 		for line in lines:
@@ -321,9 +387,11 @@ class WindowsHostsFileFormatter(BaseFormatter):
 			formatted.append(line)
 		return formatted
 
+
 def combineWithScriptDirectory(filename):
 	thisScriptsDirectory = os.path.dirname(os.path.abspath(__file__))
 	return os.path.join(thisScriptsDirectory, filename)
+
 
 def loadWhitelist() -> List[str]:
 	whitelistPath = combineWithScriptDirectory("whitelist.txt")
@@ -335,6 +403,7 @@ def loadWhitelist() -> List[str]:
 		printError("no whitelist file found")
 	return []
 
+
 def loadBlacklist() -> List[str]:
 	blacklistPath = combineWithScriptDirectory("blacklist.txt")
 	try:
@@ -345,8 +414,10 @@ def loadBlacklist() -> List[str]:
 		printError("no blacklist file found")
 	return []
 
+
 def removeDupes(lines: List[str]) -> List[str]:
 	return list(OrderedDict.fromkeys(lines))
+
 
 def readLines(path) -> List[str]:
 	with open(path, "r") as file:
@@ -355,8 +426,10 @@ def readLines(path) -> List[str]:
 		filterFunc = lambda x: not x.startswith("#") and len(x) > 0
 		return list(filter(filterFunc, file.read().splitlines()))
 
+
 def writeLinesToStdOut(lines: List[str]):
 	print("\n".join(lines), file=sys.stdout)
+
 
 def writeLinesToFile(lines, filename):
 	if len(lines) > 0:
@@ -368,11 +441,13 @@ def writeLinesToFile(lines, filename):
 	else:
 		printError("no lines to write")
 
+
 def writeLines(lines, filename):
 	if filename is None:
 		writeLinesToStdOut(lines)
 	else:
 		writeLinesToFile(lines, filename)
+
 
 def process(serverFormatter, filename):
 	printError("using {}".format(serverFormatter.name))
@@ -398,6 +473,7 @@ def process(serverFormatter, filename):
 	formattedForServer = serverFormatter.format(uniqueLines)
 	writeLines(formattedForServer, filename)
 
+
 def parseArguments(args):
 	if len(args) < 1:
 		print(getUsage())
@@ -411,13 +487,16 @@ def parseArguments(args):
 		filename = None
 	return (serverFormatter, filename)
 
+
 def printError(message: str):
 	print(message, file=sys.stderr)
+
 
 def getUsage():
 	return """USAGE:
 first argument is DNS server type (REQUIRED): unbound, bind, winhosts
 second argument is output filename (OPTIONAL) """
+
 
 def main(args: List[str]):
 	try:
@@ -426,6 +505,7 @@ def main(args: List[str]):
 	except Exception as e:
 		logging.getLogger(__name__).exception(e)
 		sys.exit(-1)
+
 
 if __name__ == "__main__":
 	main(sys.argv[1:])

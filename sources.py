@@ -3,6 +3,7 @@ from typing import List
 from main import printError
 from exceptions import DownloadError, NoSourcesConfiguredError
 
+
 def getSources():
 	return [
 		MVPS(),
@@ -15,17 +16,21 @@ def getSources():
 		FirebogEasyList(),
 		OSIntDigitalSide(),
 		PolishFiltersTeamKADHosts(),
-		PhishingArmyBlocklistExtended()
+		PhishingArmyBlocklistExtended(),
 	]
 
+
 def isComment(line: str) -> bool:
-	return line.startswith('#')
+	return line.startswith("#")
+
 
 def isEmpty(line: str) -> bool:
 	return len(line) == 0
 
+
 def isLocalhost(line: str) -> bool:
 	return line == "localhost"
+
 
 def containsDoubleDots(line: str) -> bool:
 	"""
@@ -36,27 +41,28 @@ def containsDoubleDots(line: str) -> bool:
 	# and accept the domain then
 	return ".." in line
 
-def isValid(line: str) -> bool:
-	""" returns true if every validator returns false """
-	return not any([ validator(line) for validator in validatorFuncs ])
 
-validatorFuncs = [
-	isComment,
-	isEmpty,
-	isLocalhost,
-	containsDoubleDots
-]
+def isValid(line: str) -> bool:
+	"""returns true if every validator returns false"""
+	return not any([validator(line) for validator in validatorFuncs])
+
+
+validatorFuncs = [isComment, isEmpty, isLocalhost, containsDoubleDots]
+
 
 def removeTrailingDot(line: str) -> str:
-	return line[:-1] if line.endswith('.') else line
+	return line[:-1] if line.endswith(".") else line
+
 
 def makeLowerCase(line: str) -> str:
 	return line.lower()
+
 
 def normalize(line: str) -> str:
 	line = removeTrailingDot(line)
 	line = makeLowerCase(line)
 	return line
+
 
 def downloadSource(session: requests.Session, source) -> List[str]:
 	response = session.get(source.url)
@@ -64,8 +70,9 @@ def downloadSource(session: requests.Session, source) -> List[str]:
 		raise DownloadError(source, response.status_code)
 	return response.text.splitlines()
 
+
 def downloadSources(sources) -> List[str]:
-	""" downloads lists of domain names from the sources, then normalizes and validates them """
+	"""downloads lists of domain names from the sources, then normalizes and validates them"""
 	if len(sources) == 0:
 		raise NoSourcesConfiguredError()
 	lines: List[str] = []
@@ -80,31 +87,39 @@ def downloadSources(sources) -> List[str]:
 			printError(createSourceDownloadSummary(source, len(formattedLines)))
 	return lines
 
+
 def createSourceDownloadSummary(source, count) -> str:
 	longestNameLength = max(len(s.name) for s in getSources())
 	paddingRequired = longestNameLength - len(source.name)
-	padding = " " * paddingRequired # creates a string of empty spaces of paddingRequired's length
+	padding = " " * paddingRequired  # creates a string of empty spaces of paddingRequired's length
 	return "-\t{}{}\t{}".format(source.name, padding, count)
+
 
 def sourceToString(source) -> str:
 	return "{} ({})".format(source.name, source.url)
 
-class BaseSource():
+
+class BaseSource:
 	@property
 	def name(self) -> str:
 		return self._name
+
 	@property
 	def url(self) -> str:
 		return self._url
+
 	def format(self, lines: List[str]) -> List[str]:
 		return lines
+
 	def __str__(self) -> str:
 		return sourceToString(self)
+
 
 class MVPS(BaseSource):
 	def __init__(self) -> None:
 		self._name = "MVPS"
 		self._url = "http://winhelp2002.mvps.org/hosts.txt"
+
 	@classmethod
 	def format(self, lines: List[str]) -> List[str]:
 		formatted = []
@@ -112,24 +127,28 @@ class MVPS(BaseSource):
 			if line.__contains__("localhost"):
 				continue
 			line = str.replace(line, "0.0.0.0 ", "")
-			line = line.partition("#")[0] # removes trailing comment if present
+			line = line.partition("#")[0]  # removes trailing comment if present
 			formatted.append(line)
 		return formatted
+
 
 class FirebogAdGuardDNS(BaseSource):
 	def __init__(self) -> None:
 		self._name = "Firebog AdGuard DNS"
 		self._url = "https://v.firebog.net/hosts/AdguardDNS.txt"
 
+
 class FirebogPrigentAds(BaseSource):
 	def __init__(self) -> None:
 		self._name = "Firebog Prigent Ads"
 		self._url = "https://v.firebog.net/hosts/Prigent-Ads.txt"
 
+
 class FirebogPrigentCrypto(BaseSource):
 	def __init__(self) -> None:
 		self._name = "Firebog Prigent Crypto"
 		self._url = "https://v.firebog.net/hosts/Prigent-Crypto.txt"
+
 	@classmethod
 	def format(self, lines: List[str]) -> List[str]:
 		formatted = []
@@ -138,35 +157,42 @@ class FirebogPrigentCrypto(BaseSource):
 			formatted.append(line)
 		return formatted
 
+
 class FirebogPrigentMalware(BaseSource):
 	def __init__(self) -> None:
 		self._name = "Firebog Prigent Malware"
 		self._url = "https://v.firebog.net/hosts/Prigent-Malware.txt"
+
 
 class FirebogAdmiral(BaseSource):
 	def __init__(self) -> None:
 		self._name = "Firebog Admiral"
 		self._url = "https://v.firebog.net/hosts/Admiral.txt"
 
+
 class FirebogEasyPrivacy(BaseSource):
 	def __init__(self) -> None:
 		self._name = "Firebog Easy Privacy"
 		self._url = "https://v.firebog.net/hosts/Easyprivacy.txt"
+
 
 class FirebogEasyList(BaseSource):
 	def __init__(self) -> None:
 		self._name = "Firebog Easy List"
 		self._url = "https://v.firebog.net/hosts/Easylist.txt"
 
+
 class OSIntDigitalSide(BaseSource):
 	def __init__(self) -> None:
 		self._name = "OSIntDigitalSide"
 		self._url = "https://osint.digitalside.it/Threat-Intel/lists/latestdomains.txt"
 
+
 class PolishFiltersTeamKADHosts(BaseSource):
 	def __init__(self) -> None:
 		self._name = "Polish Filters Team KAD Hosts"
 		self._url = "https://raw.githubusercontent.com/PolishFiltersTeam/KADhosts/master/KADhosts.txt"
+
 	@classmethod
 	def format(self, lines: List[str]) -> List[str]:
 		formatted = []
@@ -174,6 +200,7 @@ class PolishFiltersTeamKADHosts(BaseSource):
 			line = str.replace(line, "0.0.0.0 ", "")
 			formatted.append(line)
 		return formatted
+
 
 class PhishingArmyBlocklistExtended(BaseSource):
 	def __init__(self) -> None:
