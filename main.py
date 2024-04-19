@@ -2,10 +2,11 @@ import os
 import sys
 import logging
 import requests
+from typing import List
 from collections import OrderedDict
-from formatters import *
-from sources import *
-from exceptions import *
+from formatters import determineServerFormatter
+from sources import getSources, downloadSources
+from exceptions import DownloadError, FileReadError, FileWriteError, UsageError
 
 
 def combineWithScriptDirectory(filename):
@@ -43,8 +44,7 @@ def readLines(path) -> List[str]:
 	with open(path, "r") as file:
 		if not file.readable:
 			raise FileReadError(path)
-		filterFunc = lambda x: not x.startswith("#") and len(x) > 0
-		return list(filter(filterFunc, file.read().splitlines()))
+		return list(filter(lambda x: not x.startswith("#") and len(x) > 0, file.read().splitlines()))
 
 
 def writeLinesToStdOut(lines: List[str]):
