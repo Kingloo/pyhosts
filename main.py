@@ -73,12 +73,8 @@ def process(serverFormatter, filename):
 	printError("using {}".format(serverFormatter.name))
 	lines: List[str] = []
 	lines.extend(loadBlacklist())
-	try:
-		downloaded = downloadSources(getSources())
-		lines.extend(downloaded)
-	except (DownloadError, requests.HTTPError) as e:
-		printError("downloading failed ({})".format(e.message))
-		sys.exit(-1)
+	downloaded = downloadSources(getSources())
+	lines.extend(downloaded)
 	uniqueLines = removeDupes(lines)
 	printError("finished downloading ({} total, {} unique)".format(len(lines), len(uniqueLines)))
 	savedViaWhitelist = []

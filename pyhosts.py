@@ -184,7 +184,7 @@ def normalize(line: str) -> str:
 def downloadSource(session: requests.Session, source) -> List[str]:
 	response = session.get(source.url)
 	if response.status_code != 200:
-		raise DownloadError(source, response.status_code)
+		printError("downloading '{}' gave HTTP status code {}", source, response.status_code)
 	return response.text.splitlines()
 
 
@@ -196,7 +196,11 @@ def downloadSources(sources) -> List[str]:
 	with requests.Session() as session:
 		printError("begin downloading from {} {}".format(len(sources), "source" if len(sources) == 1 else "sources"))
 		for source in sources:
-			downloadedLines = downloadSource(session, source)
+			try:
+				downloadedLines = downloadSource(session, source)
+			except Exception e:
+				printError("download failed for '{}' - '{}'".format(source, e.message))
+				continue
 			normalizedLines = map(normalize, downloadedLines)
 			wantedLines = filter(isValid, normalizedLines)
 			formattedLines = list(source.format(wantedLines))
@@ -452,12 +456,8 @@ def process(serverFormatter, filename):
 	printError("using {}".format(serverFormatter.name))
 	lines: List[str] = []
 	lines.extend(loadBlacklist())
-	try:
-		downloaded = downloadSources(getSources())
-		lines.extend(downloaded)
-	except (DownloadError, requests.HTTPError) as e:
-		printError("downloading failed ({})".format(e.message))
-		sys.exit(-1)
+	downloaded = downloadSources(getSources())
+	lines.extend(downloaded)
 	uniqueLines = removeDupes(lines)
 	printError("finished downloading ({} total, {} unique)".format(len(lines), len(uniqueLines)))
 	savedViaWhitelist = []
