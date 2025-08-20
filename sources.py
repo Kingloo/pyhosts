@@ -81,7 +81,7 @@ def downloadSources(sources) -> List[str]:
 		for source in sources:
 			try:
 				downloadedLines = downloadSource(session, source)
-			except Exception e:
+			except Exception as e:
 				printError("download failed for '{}' - '{}'".format(source, e.message))
 				continue
 			normalizedLines = map(normalize, downloadedLines)
