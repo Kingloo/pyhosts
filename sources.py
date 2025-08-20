@@ -14,7 +14,7 @@ def getSources():
 		FirebogAdmiral(),
 		FirebogEasyPrivacy(),
 		FirebogEasyList(),
-		OSIntDigitalSide(),
+		#OSIntDigitalSide(),
 		PolishFiltersTeamKADHosts(),
 		PhishingArmyBlocklistExtended(),
 	]
