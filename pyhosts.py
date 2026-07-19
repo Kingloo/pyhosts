@@ -171,12 +171,17 @@ def removeTrailingDot(line: str) -> str:
 	return line[:-1] if line.endswith(".") else line
 
 
+def removeStartingDot(line: str) -> str:
+	return line[1:] if line.startswith(".") else line
+
+
 def makeLowerCase(line: str) -> str:
 	return line.lower()
 
 
 def normalize(line: str) -> str:
 	line = removeTrailingDot(line)
+	line = removeStartingDot(line)
 	line = makeLowerCase(line)
 	return line
 
